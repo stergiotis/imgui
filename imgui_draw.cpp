@@ -397,6 +397,7 @@ void ImDrawListSharedData::SetCircleTessellationMaxError(float max_error)
 // In the majority of cases, you would want to call PushClipRect() and PushTextureID() after this.
 void ImDrawList::_ResetForNewFrame()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::_ResetForNewFrame(this));
     // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
     IM_STATIC_ASSERT(offsetof(ImDrawCmd, ClipRect) == 0);
     IM_STATIC_ASSERT(offsetof(ImDrawCmd, TextureId) == sizeof(ImVec4));
@@ -422,6 +423,7 @@ void ImDrawList::_ResetForNewFrame()
 
 void ImDrawList::_ClearFreeMemory()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::_ClearFreeMemory(this));
     CmdBuffer.clear();
     IdxBuffer.clear();
     VtxBuffer.clear();
@@ -442,11 +444,13 @@ ImDrawList* ImDrawList::CloneOutput() const
     dst->IdxBuffer = IdxBuffer;
     dst->VtxBuffer = VtxBuffer;
     dst->Flags = Flags;
+    HOOK_DRAW_LIST_POST(ImGui::Hooks::ImDrawList::Post::CloneOutput(this,dest));
     return dst;
 }
 
 void ImDrawList::AddDrawCmd()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddDrawCmd(this));
     ImDrawCmd draw_cmd;
     draw_cmd.ClipRect = _CmdHeader.ClipRect;    // Same as calling ImDrawCmd_HeaderCopy()
     draw_cmd.TextureId = _CmdHeader.TextureId;
@@ -461,6 +465,7 @@ void ImDrawList::AddDrawCmd()
 // Note that this leaves the ImDrawList in a state unfit for further commands, as most code assume that CmdBuffer.Size > 0 && CmdBuffer.back().UserCallback == NULL
 void ImDrawList::_PopUnusedDrawCmd()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::_PopUnusedDrawCmd(this));
     while (CmdBuffer.Size > 0)
     {
         ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
@@ -472,6 +477,7 @@ void ImDrawList::_PopUnusedDrawCmd()
 
 void ImDrawList::AddCallback(ImDrawCallback callback, void* callback_data)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddCallback(this,callback,callback_data));
     IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
     IM_ASSERT(curr_cmd->UserCallback == NULL);
@@ -495,6 +501,8 @@ void ImDrawList::AddCallback(ImDrawCallback callback, void* callback_data)
 // Try to merge two last draw commands
 void ImDrawList::_TryMergeDrawCmds()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::_TryMergeDrawCmds(this));
+    IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
     ImDrawCmd* prev_cmd = curr_cmd - 1;
@@ -509,6 +517,7 @@ void ImDrawList::_TryMergeDrawCmds()
 // The cost of figuring out if a new command has to be added or if we can merge is paid in those Update** functions only.
 void ImDrawList::_OnChangedClipRect()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::_OnChangedClipRect(this));
     // If current command is used with different settings we need to add a new command
     IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
@@ -532,6 +541,7 @@ void ImDrawList::_OnChangedClipRect()
 
 void ImDrawList::_OnChangedTextureID()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::_OnChangedTextureID(this));
     // If current command is used with different settings we need to add a new command
     IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
@@ -555,6 +565,7 @@ void ImDrawList::_OnChangedTextureID()
 
 void ImDrawList::_OnChangedVtxOffset()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::_OnChangedVtxOffset(this));
     // We don't need to compare curr_cmd->VtxOffset != _CmdHeader.VtxOffset because we know it'll be different at the time we call this.
     _VtxCurrentIdx = 0;
     IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
@@ -582,6 +593,7 @@ int ImDrawList::_CalcCircleAutoSegmentCount(float radius) const
 // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level ImGui::PushClipRect() to affect logic (hit-testing and widget culling)
 void ImDrawList::PushClipRect(const ImVec2& cr_min, const ImVec2& cr_max, bool intersect_with_current_clip_rect)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PushClipRect(this,cr_min,cr_max,intersect_with_current_clip_rect));
     ImVec4 cr(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
     if (intersect_with_current_clip_rect)
     {
@@ -601,11 +613,13 @@ void ImDrawList::PushClipRect(const ImVec2& cr_min, const ImVec2& cr_max, bool i
 
 void ImDrawList::PushClipRectFullScreen()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PushClipRectFullScreen(this));
     PushClipRect(ImVec2(_Data->ClipRectFullscreen.x, _Data->ClipRectFullscreen.y), ImVec2(_Data->ClipRectFullscreen.z, _Data->ClipRectFullscreen.w));
 }
 
 void ImDrawList::PopClipRect()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PopClipRect(this));
     _ClipRectStack.pop_back();
     _CmdHeader.ClipRect = (_ClipRectStack.Size == 0) ? _Data->ClipRectFullscreen : _ClipRectStack.Data[_ClipRectStack.Size - 1];
     _OnChangedClipRect();
@@ -613,6 +627,7 @@ void ImDrawList::PopClipRect()
 
 void ImDrawList::PushTextureID(ImTextureID texture_id)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PushTextureID(this,texture_id));
     _TextureIdStack.push_back(texture_id);
     _CmdHeader.TextureId = texture_id;
     _OnChangedTextureID();
@@ -620,6 +635,7 @@ void ImDrawList::PushTextureID(ImTextureID texture_id)
 
 void ImDrawList::PopTextureID()
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PopTextureID(this));
     _TextureIdStack.pop_back();
     _CmdHeader.TextureId = (_TextureIdStack.Size == 0) ? (ImTextureID)NULL : _TextureIdStack.Data[_TextureIdStack.Size - 1];
     _OnChangedTextureID();
@@ -630,6 +646,7 @@ void ImDrawList::PopTextureID()
 // submit the intermediate results. PrimUnreserve() can be used to release unused allocations.
 void ImDrawList::PrimReserve(int idx_count, int vtx_count)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimReserve(this,idx_count,vtx_count));
     // Large mesh support (when enabled)
     IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
     if (sizeof(ImDrawIdx) == 2 && (_VtxCurrentIdx + vtx_count >= (1 << 16)) && (Flags & ImDrawListFlags_AllowVtxOffset))
@@ -656,6 +673,7 @@ void ImDrawList::PrimReserve(int idx_count, int vtx_count)
 // Release the number of reserved vertices/indices from the end of the last reservation made with PrimReserve().
 void ImDrawList::PrimUnreserve(int idx_count, int vtx_count)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimReserve(this,idx_count,vtx_count));
     IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
 
     ImDrawCmd* draw_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
@@ -667,6 +685,7 @@ void ImDrawList::PrimUnreserve(int idx_count, int vtx_count)
 // Fully unrolled with inline call to keep our debug builds decently fast.
 void ImDrawList::PrimRect(const ImVec2& a, const ImVec2& c, ImU32 col)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimRect(this,a,c,col));
     ImVec2 b(c.x, a.y), d(a.x, c.y), uv(_Data->TexUvWhitePixel);
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
     _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
@@ -682,6 +701,7 @@ void ImDrawList::PrimRect(const ImVec2& a, const ImVec2& c, ImU32 col)
 
 void ImDrawList::PrimRectUV(const ImVec2& a, const ImVec2& c, const ImVec2& uv_a, const ImVec2& uv_c, ImU32 col)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimRectUV(this,a,c,uv_a,uv_c,col));
     ImVec2 b(c.x, a.y), d(a.x, c.y), uv_b(uv_c.x, uv_a.y), uv_d(uv_a.x, uv_c.y);
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
     _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
@@ -697,6 +717,7 @@ void ImDrawList::PrimRectUV(const ImVec2& a, const ImVec2& c, const ImVec2& uv_a
 
 void ImDrawList::PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimQuadUV(this,a,b,c,d,uv_a,uv_a,uv_b,uv_c,uv_d,col));
     ImDrawIdx idx = (ImDrawIdx)_VtxCurrentIdx;
     _IdxWritePtr[0] = idx; _IdxWritePtr[1] = (ImDrawIdx)(idx+1); _IdxWritePtr[2] = (ImDrawIdx)(idx+2);
     _IdxWritePtr[3] = idx; _IdxWritePtr[4] = (ImDrawIdx)(idx+2); _IdxWritePtr[5] = (ImDrawIdx)(idx+3);
@@ -722,6 +743,7 @@ void ImDrawList::AddPolyline(const ImVec2* points, const int points_count, ImU32
 {
     if (points_count < 2 || (col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddPolyline(this,points,points_count,col,flags,thickness));
 
     const bool closed = (flags & ImDrawFlags_Closed) != 0;
     const ImVec2 opaque_uv = _Data->TexUvWhitePixel;
@@ -980,6 +1002,7 @@ void ImDrawList::AddConvexPolyFilled(const ImVec2* points, const int points_coun
 {
     if (points_count < 3 || (col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddConvexPolyFilled(this,points,points_count,col));
 
     const ImVec2 uv = _Data->TexUvWhitePixel;
 
@@ -1181,6 +1204,7 @@ void ImDrawList::PathArcToFast(const ImVec2& center, float radius, int a_min_of_
 
 void ImDrawList::PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathArcTo(this,center,radius,a_min,a_max,num_segments));
     if (radius < 0.5f)
     {
         _Path.push_back(center);
@@ -1231,6 +1255,7 @@ void ImDrawList::PathArcTo(const ImVec2& center, float radius, float a_min, floa
 
 void ImDrawList::PathEllipticalArcTo(const ImVec2& center, const ImVec2& radius, float rot, float a_min, float a_max, int num_segments)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathEllipticalArcTo(this,center,radius,rot,a_min,a_max,num_segments));
     if (num_segments <= 0)
         num_segments = _CalcCircleAutoSegmentCount(ImMax(radius.x, radius.y)); // A bit pessimistic, maybe there's a better computation to do here.
 
@@ -1370,6 +1395,7 @@ static inline ImDrawFlags FixRectCornerFlags(ImDrawFlags flags)
 
 void ImDrawList::PathRect(const ImVec2& a, const ImVec2& b, float rounding, ImDrawFlags flags)
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathRect(this,a,b,rounding,flags));
     if (rounding >= 0.5f)
     {
         flags = FixRectCornerFlags(flags);
@@ -1400,6 +1426,7 @@ void ImDrawList::AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float th
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddLine(this,p1,p2,col,thickness));
     PathLineTo(p1 + ImVec2(0.5f, 0.5f));
     PathLineTo(p2 + ImVec2(0.5f, 0.5f));
     PathStroke(col, 0, thickness);
@@ -1411,6 +1438,7 @@ void ImDrawList::AddRect(const ImVec2& p_min, const ImVec2& p_max, ImU32 col, fl
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddRect(this,p_min,p_max,col,rounding,flags,thickness));
     if (Flags & ImDrawListFlags_AntiAliasedLines)
         PathRect(p_min + ImVec2(0.50f, 0.50f), p_max - ImVec2(0.50f, 0.50f), rounding, flags);
     else
@@ -1422,6 +1450,7 @@ void ImDrawList::AddRectFilled(const ImVec2& p_min, const ImVec2& p_max, ImU32 c
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddRectFilled(this,p_min,p_max,col,rounding,flags));
     if (rounding < 0.5f || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone)
     {
         PrimReserve(6, 4);
@@ -1439,6 +1468,7 @@ void ImDrawList::AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_ma
 {
     if (((col_upr_left | col_upr_right | col_bot_right | col_bot_left) & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddRectFilledMultiColor(this,p_min,p_max,col_upr_left,col_upr_right,col_bot_right,col_bot_left));
 
     const ImVec2 uv = _Data->TexUvWhitePixel;
     PrimReserve(6, 4);
@@ -1454,6 +1484,7 @@ void ImDrawList::AddQuad(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, c
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddQuad(this,p1,p2,p3,p4,col,thickness));
 
     PathLineTo(p1);
     PathLineTo(p2);
@@ -1466,6 +1497,7 @@ void ImDrawList::AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2&
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddQuadFilled(this,p1,p2,p3,p4,col));
 
     PathLineTo(p1);
     PathLineTo(p2);
@@ -1489,6 +1521,7 @@ void ImDrawList::AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImV
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddTriangleFilled(this,p1,p2,p3,col));
 
     PathLineTo(p1);
     PathLineTo(p2);
@@ -1500,6 +1533,7 @@ void ImDrawList::AddCircle(const ImVec2& center, float radius, ImU32 col, int nu
 {
     if ((col & IM_COL32_A_MASK) == 0 || radius < 0.5f)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddCircle(this,center,radius,col,num_segments,thickness));
 
     if (num_segments <= 0)
     {
@@ -1524,6 +1558,7 @@ void ImDrawList::AddCircleFilled(const ImVec2& center, float radius, ImU32 col, 
 {
     if ((col & IM_COL32_A_MASK) == 0 || radius < 0.5f)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddCircleFilled(this,center,radius,col,num_segments));
 
     if (num_segments <= 0)
     {
@@ -1549,6 +1584,7 @@ void ImDrawList::AddNgon(const ImVec2& center, float radius, ImU32 col, int num_
 {
     if ((col & IM_COL32_A_MASK) == 0 || num_segments <= 2)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddNgon(this,center,radius,col,num_segments,thickness));
 
     // Because we are filling a closed shape we remove 1 from the count of segments/points
     const float a_max = (IM_PI * 2.0f) * ((float)num_segments - 1.0f) / (float)num_segments;
@@ -1561,6 +1597,7 @@ void ImDrawList::AddNgonFilled(const ImVec2& center, float radius, ImU32 col, in
 {
     if ((col & IM_COL32_A_MASK) == 0 || num_segments <= 2)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddNgonFilled(this,center,radius,col,num_segments));
 
     // Because we are filling a closed shape we remove 1 from the count of segments/points
     const float a_max = (IM_PI * 2.0f) * ((float)num_segments - 1.0f) / (float)num_segments;
@@ -1573,6 +1610,7 @@ void ImDrawList::AddEllipse(const ImVec2& center, const ImVec2& radius, ImU32 co
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddNgonFilled(this,center,radius,col,rot,num_segments,thickness));
 
     if (num_segments <= 0)
         num_segments = _CalcCircleAutoSegmentCount(ImMax(radius.x, radius.y)); // A bit pessimistic, maybe there's a better computation to do here.
@@ -1587,6 +1625,7 @@ void ImDrawList::AddEllipseFilled(const ImVec2& center, const ImVec2& radius, Im
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddEllipseFilled(this,center,radius,col,rot,num_segments));
 
     if (num_segments <= 0)
         num_segments = _CalcCircleAutoSegmentCount(ImMax(radius.x, radius.y)); // A bit pessimistic, maybe there's a better computation to do here.
@@ -1602,6 +1641,7 @@ void ImDrawList::AddBezierCubic(const ImVec2& p1, const ImVec2& p2, const ImVec2
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddBezierCubic(this,p1,p2,p3,p4,col,thickness,num_segments));
 
     PathLineTo(p1);
     PathBezierCubicCurveTo(p2, p3, p4, num_segments);
@@ -1613,6 +1653,7 @@ void ImDrawList::AddBezierQuadratic(const ImVec2& p1, const ImVec2& p2, const Im
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddBezierQuadratic(this,p1,p2,p3,col,thickness,num_segments));
 
     PathLineTo(p1);
     PathBezierQuadraticCurveTo(p2, p3, num_segments);
@@ -1658,6 +1699,7 @@ void ImDrawList::AddImage(ImTextureID user_texture_id, const ImVec2& p_min, cons
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddImage(this,user_texture_id,p_min,p_max,uv_min,uv_max,col));
 
     const bool push_texture_id = user_texture_id != _CmdHeader.TextureId;
     if (push_texture_id)
@@ -1674,6 +1716,7 @@ void ImDrawList::AddImageQuad(ImTextureID user_texture_id, const ImVec2& p1, con
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddImageQuad(this,user_texture_id,p1,p2,p3,p4,uv1,uv2,uv3,uv4,col));
 
     const bool push_texture_id = user_texture_id != _CmdHeader.TextureId;
     if (push_texture_id)
@@ -1690,6 +1733,7 @@ void ImDrawList::AddImageRounded(ImTextureID user_texture_id, const ImVec2& p_mi
 {
     if ((col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddImageRounded(this,p_min,p_max,uv_min,uv_max,col,rounding,flags));
 
     flags = FixRectCornerFlags(flags);
     if (rounding < 0.5f || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone)
@@ -1937,6 +1981,7 @@ void ImDrawList::AddConcavePolyFilled(const ImVec2* points, const int points_cou
 {
     if (points_count < 3 || (col & IM_COL32_A_MASK) == 0)
         return;
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddConcavePolyFilled(this,points,points_count,col));
 
     const ImVec2 uv = _Data->TexUvWhitePixel;
     ImTriangulator triangulator;
@@ -2029,15 +2074,20 @@ void ImDrawList::AddConcavePolyFilled(const ImVec2* points, const int points_cou
 // FIXME: This may be a little confusing, trying to be a little too low-level/optimal instead of just doing vector swap..
 //-----------------------------------------------------------------------------
 
+
 void ImDrawListSplitter::ClearFreeMemory()
 {
     for (int i = 0; i < _Channels.Size; i++)
     {
-        if (i == _Current)
+        if (i == _Current) {
             memset(&_Channels[i], 0, sizeof(_Channels[i]));  // Current channel is a copy of CmdBuffer/IdxBuffer, don't destruct again
+        }
         _Channels[i]._CmdBuffer.clear();
         _Channels[i]._IdxBuffer.clear();
     }
+#ifdef HOOK_DRAW_LIST_SPLITTER
+    ImGui::Hooks::ImDrawListSplitter::ClearFreeMemory(*this);
+#endif
     _Current = 0;
     _Count = 1;
     _Channels.clear();
@@ -2052,6 +2102,9 @@ void ImDrawListSplitter::Split(ImDrawList* draw_list, int channels_count)
     {
         _Channels.reserve(channels_count); // Avoid over reserving since this is likely to stay stable
         _Channels.resize(channels_count);
+#ifdef HOOK_DRAW_LIST_SPLITTER
+        ImGui::Hooks::ImDrawListSplitter::EnsureSlotsCapacity(*this,channels_count);
+#endif
     }
     _Count = channels_count;
 
@@ -2064,11 +2117,17 @@ void ImDrawListSplitter::Split(ImDrawList* draw_list, int channels_count)
         if (i >= old_channels_count)
         {
             IM_PLACEMENT_NEW(&_Channels[i]) ImDrawChannel();
+#ifdef HOOK_DRAW_LIST_SPLITTER
+            ImGui::Hooks::ImDrawListSplitter::InitSlot(*this,i);
+#endif
         }
         else
         {
             _Channels[i]._CmdBuffer.resize(0);
             _Channels[i]._IdxBuffer.resize(0);
+#ifdef HOOK_DRAW_LIST_SPLITTER
+            ImGui::Hooks::ImDrawListSplitter::ResetSlot(*this,i);
+#endif
         }
     }
 }
@@ -2082,9 +2141,13 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
     SetCurrentChannel(draw_list, 0);
     draw_list->_PopUnusedDrawCmd();
 
+
     // Calculate our final buffer sizes. Also fix the incorrect IdxOffset values in each command.
     int new_cmd_buffer_count = 0;
     int new_idx_buffer_count = 0;
+#ifdef HOOK_DRAW_LIST_SPLITTER
+    auto imzero_acc = ImGui::Hooks::ImDrawListSplitter::MergeInitialValue(*this, draw_list);
+#endif
     ImDrawCmd* last_cmd = (_Count > 0 && draw_list->CmdBuffer.Size > 0) ? &draw_list->CmdBuffer.back() : NULL;
     int idx_offset = last_cmd ? last_cmd->IdxOffset + last_cmd->ElemCount : 0;
     for (int i = 1; i < _Count; i++)
@@ -2110,14 +2173,20 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
             last_cmd = &ch._CmdBuffer.back();
         new_cmd_buffer_count += ch._CmdBuffer.Size;
         new_idx_buffer_count += ch._IdxBuffer.Size;
+#ifdef HOOK_DRAW_LIST_SPLITTER
+        imzero_acc = ImGui::Hooks::ImDrawListSplitter::MergeUpdate(*this,i,imzero_acc);
+#endif
         for (int cmd_n = 0; cmd_n < ch._CmdBuffer.Size; cmd_n++)
         {
             ch._CmdBuffer.Data[cmd_n].IdxOffset = idx_offset;
-            idx_offset += ch._CmdBuffer.Data[cmd_n].ElemCount;
+            idx_offset += static_cast<int>(ch._CmdBuffer.Data[cmd_n].ElemCount);
         }
     }
     draw_list->CmdBuffer.resize(draw_list->CmdBuffer.Size + new_cmd_buffer_count);
     draw_list->IdxBuffer.resize(draw_list->IdxBuffer.Size + new_idx_buffer_count);
+#ifdef HOOK_DRAW_LIST_SPLITTER
+    ImGui::Hooks::ImDrawListSplitter::MergeReserve(draw_list,imzero_acc);
+#endif
 
     // Write commands and indices in order (they are fairly small structures, we don't copy vertices only indices)
     ImDrawCmd* cmd_write = draw_list->CmdBuffer.Data + draw_list->CmdBuffer.Size - new_cmd_buffer_count;
@@ -2127,6 +2196,10 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
         ImDrawChannel& ch = _Channels[i];
         if (int sz = ch._CmdBuffer.Size) { memcpy(cmd_write, ch._CmdBuffer.Data, sz * sizeof(ImDrawCmd)); cmd_write += sz; }
         if (int sz = ch._IdxBuffer.Size) { memcpy(idx_write, ch._IdxBuffer.Data, sz * sizeof(ImDrawIdx)); idx_write += sz; }
+#ifdef HOOK_DRAW_LIST_SPLITTER
+        ImGui::Hooks::ImDrawListSplitter::MergeOp(*this,draw_list,i);
+        ImGui::Hooks::ImDrawListSplitter::ResetSlot(*this,i);
+#endif
     }
     draw_list->_IdxWritePtr = idx_write;
 
@@ -2147,12 +2220,21 @@ void ImDrawListSplitter::Merge(ImDrawList* draw_list)
 void ImDrawListSplitter::SetCurrentChannel(ImDrawList* draw_list, int idx)
 {
     IM_ASSERT(idx >= 0 && idx < _Count);
+
+    // NOTE: this function needs to be idempotent
     if (_Current == idx)
         return;
 
     // Overwrite ImVector (12/16 bytes), four times. This is merely a silly optimization instead of doing .swap()
     memcpy(&_Channels.Data[_Current]._CmdBuffer, &draw_list->CmdBuffer, sizeof(draw_list->CmdBuffer));
     memcpy(&_Channels.Data[_Current]._IdxBuffer, &draw_list->IdxBuffer, sizeof(draw_list->IdxBuffer));
+
+#ifdef HOOK_DRAW_LIST_SPLITTER
+    ImGui::Hooks::ImDrawListSplitter::InitSlots(*this, ImGui::Hooks::ImDrawListSplitter::EnsureSlotsCapacity(*this,idx));
+    ImGui::Hooks::ImDrawListSplitter::SaveDrawListToSplitter(*this,draw_list,_Current);
+    ImGui::Hooks::ImDrawListSplitter::RestoreDrawListFromSplitter(*this,draw_list,idx);
+#endif
+
     _Current = idx;
     memcpy(&draw_list->CmdBuffer, &_Channels.Data[idx]._CmdBuffer, sizeof(draw_list->CmdBuffer));
     memcpy(&draw_list->IdxBuffer, &_Channels.Data[idx]._IdxBuffer, sizeof(draw_list->IdxBuffer));
@@ -4000,6 +4082,8 @@ ImVec2 ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, cons
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
 void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c) const
 {
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImFont::Pre::RenderChar(this,draw_list,size,pos,col,c));
+
     const ImFontGlyph* glyph = FindGlyph(c);
     if (!glyph || !glyph->Visible)
         return;
@@ -4017,6 +4101,8 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 {
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
+
+    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImFont::Pre::RenderText(this,draw_list,size,pos,col,clip_rect,text_begin,text_end,wrap_width,cpu_fine_clip));
 
     // Align to be pixel perfect
     float x = IM_TRUNC(pos.x);
