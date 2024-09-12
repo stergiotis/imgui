@@ -64,7 +64,6 @@ Index of this file:
 #include IMGUI_USER_CONFIG
 #endif
 #include "imconfig.h"
-#include "hooking.h"
 
 #ifndef IMGUI_DISABLE
 
@@ -325,6 +324,10 @@ IM_MSVC_RUNTIME_CHECKS_RESTORE
 // [SECTION] Dear ImGui end-user API functions
 // (Note that ImGui:: being a namespace, you can add extra ImGui:: functions in your own separate file. Please don't modify imgui source files!)
 //-----------------------------------------------------------------------------
+
+#ifdef IMGUI_HOOK_ENABLE
+#include "hooking.h"
+#endif
 
 namespace ImGui
 {
@@ -3142,6 +3145,10 @@ struct ImDrawListSplitter
     IMGUI_API void              Split(ImDrawList* draw_list, int count);
     IMGUI_API void              Merge(ImDrawList* draw_list);
     IMGUI_API void              SetCurrentChannel(ImDrawList* draw_list, int channel_idx);
+
+#ifdef IM_DRAW_LIST_SPLITTER_CLASS_EXTRA
+    IM_DRAW_LIST_SPLITTER_CLASS_EXTRA
+#endif
 };
 
 // Flags for ImDrawList functions
@@ -3263,12 +3270,12 @@ struct ImDrawList
     // Stateful path API, add points then finish with PathFillConvex() or PathStroke()
     // - Important: filled shapes must always use clockwise winding order! The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
     //   so e.g. 'PathArcTo(center, radius, PI * -0.5f, PI)' is ok, whereas 'PathArcTo(center, radius, PI, PI * -0.5f)' won't have correct anti-aliasing when followed by PathFillConvex().
-    inline    void  PathClear()                                                 { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathClear(this)); _Path.Size = 0; }
-    inline    void  PathLineTo(const ImVec2& pos)                               { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathLineTo(this,pos)); _Path.push_back(pos); }
-    inline    void  PathLineToMergeDuplicate(const ImVec2& pos)                 { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathLineToMergeDuplicate(this,pos)); if (_Path.Size == 0 || memcmp(&_Path.Data[_Path.Size - 1], &pos, 8) != 0) _Path.push_back(pos); }
-    inline    void  PathFillConvex(ImU32 col)                                   { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathFillConvex(this,col)); AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
-    inline    void  PathFillConcave(ImU32 col)                                  { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathFillConcave(this,col)); AddConcavePolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
-    inline    void  PathStroke(ImU32 col, ImDrawFlags flags = 0, float thickness = 1.0f) { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathStroke(thiscol,flags,thickness)); AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
+    inline    void  PathClear()                                                 { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathClear(this)); _Path.Size = 0; }
+    inline    void  PathLineTo(const ImVec2& pos)                               { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathLineTo(this,pos)); _Path.push_back(pos); }
+    inline    void  PathLineToMergeDuplicate(const ImVec2& pos)                 { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathLineToMergeDuplicate(this,pos)); if (_Path.Size == 0 || memcmp(&_Path.Data[_Path.Size - 1], &pos, 8) != 0) _Path.push_back(pos); }
+    inline    void  PathFillConvex(ImU32 col)                                   { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathFillConvex(this,col)); AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
+    inline    void  PathFillConcave(ImU32 col)                                  { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathFillConcave(this,col)); AddConcavePolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
+    inline    void  PathStroke(ImU32 col, ImDrawFlags flags = 0, float thickness = 1.0f) { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PathStroke(this, col,flags,thickness)); AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
     IMGUI_API void  PathArcTo(const ImVec2& center, float radius, float a_min, float a_max, int num_segments = 0);
     IMGUI_API void  PathArcToFast(const ImVec2& center, float radius, int a_min_of_12, int a_max_of_12);                // Use precomputed angles for a 12 steps circle
     IMGUI_API void  PathEllipticalArcTo(const ImVec2& center, const ImVec2& radius, float rot, float a_min, float a_max, int num_segments = 0); // Ellipse
@@ -3309,9 +3316,9 @@ struct ImDrawList
     IMGUI_API void  PrimRect(const ImVec2& a, const ImVec2& b, ImU32 col);      // Axis aligned rectangle (composed of two triangles)
     IMGUI_API void  PrimRectUV(const ImVec2& a, const ImVec2& b, const ImVec2& uv_a, const ImVec2& uv_b, ImU32 col);
     IMGUI_API void  PrimQuadUV(const ImVec2& a, const ImVec2& b, const ImVec2& c, const ImVec2& d, const ImVec2& uv_a, const ImVec2& uv_b, const ImVec2& uv_c, const ImVec2& uv_d, ImU32 col);
-    inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)    { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimWriteVtx(this,pos,uv,col)); _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
-    inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimWriteIdx(this,idx));  *_IdxWritePtr = idx; _IdxWritePtr++; }
-    inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)         { HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimVtx(pos,uv,col)); PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
+    inline    void  PrimWriteVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)    { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimWriteVtx(this,pos,uv,col)); _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr++; _VtxCurrentIdx++; }
+    inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimWriteIdx(this,idx));  *_IdxWritePtr = idx; _IdxWritePtr++; }
+    inline    void  PrimVtx(const ImVec2& pos, const ImVec2& uv, ImU32 col)         { IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::PrimVtx(this,pos,uv,col)); PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
 
     // Obsolete names
     //inline  void  AddEllipse(const ImVec2& center, float radius_x, float radius_y, ImU32 col, float rot = 0.0f, int num_segments = 0, float thickness = 1.0f) { AddEllipse(center, ImVec2(radius_x, radius_y), col, rot, num_segments, thickness); } // OBSOLETED in 1.90.5 (Mar 2024)
@@ -3332,6 +3339,10 @@ struct ImDrawList
     IMGUI_API int   _CalcCircleAutoSegmentCount(float radius) const;
     IMGUI_API void  _PathArcToFastEx(const ImVec2& center, float radius, int a_min_sample, int a_max_sample, int a_step);
     IMGUI_API void  _PathArcToN(const ImVec2& center, float radius, float a_min, float a_max, int num_segments);
+
+#ifdef IM_DRAW_LIST_CLASS_EXTRA
+    IM_DRAW_LIST_CLASS_EXTRA
+#endif
 };
 
 // All draw data to render a Dear ImGui frame
@@ -3595,11 +3606,11 @@ struct ImFont
     // Methods
     IMGUI_API ImFont();
     IMGUI_API ~ImFont();
-    IMGUI_API const ImFontGlyph*FindGlyph(ImWchar c);
-    IMGUI_API const ImFontGlyph*FindGlyphNoFallback(ImWchar c);
-    float                       GetCharAdvance(ImWchar c)       { return ((int)c < IndexAdvanceX.Size) ? IndexAdvanceX[(int)c] : FallbackAdvanceX; }
-    bool                        IsLoaded() const                { return ContainerAtlas != NULL; }
-    const char*                 GetDebugName() const            { return ConfigData ? ConfigData->Name : "<unknown>"; }
+    IMGUI_API const ImFontGlyph*FindGlyph(ImWchar c) const;
+    IMGUI_API const ImFontGlyph*FindGlyphNoFallback(ImWchar c) const;
+    float                       GetCharAdvance(ImWchar c) const     { return ((int)c < IndexAdvanceX.Size) ? IndexAdvanceX[(int)c] : FallbackAdvanceX; }
+    bool                        IsLoaded() const                    { return ContainerAtlas != NULL; }
+    const char*                 GetDebugName() const                { return ConfigData ? ConfigData->Name : "<unknown>"; }
 
     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). FLT_MAX to disable.
     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0f to disable.
