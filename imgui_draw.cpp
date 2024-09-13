@@ -4123,6 +4123,11 @@ const char* ImFont::CalcWordWrapPositionA(float scale, const char* text, const c
 
 ImVec2 ImFont::CalcTextSizeA(float size, float max_width, float wrap_width, const char* text_begin, const char* text_end, const char** remaining)
 {
+    {
+        ImVec2 retr;
+        IMGUI_HOOK_FONT_PRE(ImGui::Hooks::ImFont::Pre::CalcTextSizeA(this,size,max_width,wrap_width,text_begin,text_end,remaining,retr));
+    }
+
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // FIXME-OPT: Need to avoid this.
 

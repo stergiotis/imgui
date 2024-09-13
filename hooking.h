@@ -32,6 +32,7 @@ namespace ImGui {
         }
         namespace ImFont {
             namespace Pre {
+                bool CalcTextSizeA(const ::ImFont *font, float size, float max_width, float wrap_width, const char* text_begin, const char* text_end, const char** remaining, ImVec2 &retr);
                 bool RenderChar(const ::ImFont *font, ::ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c);
                 bool RenderText(const ::ImFont *font, ::ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip);
                 bool GetCharAdvance(const ::ImFont *font, float &retr, ImWchar c);
