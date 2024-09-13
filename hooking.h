@@ -1,10 +1,10 @@
 #pragma once
 
 #ifdef IMGUI_HOOK_ENABLE
-#define IMGUI_HOOK_DRAW_LIST_PRE(r) if(r) { return; }
+#define IMGUI_HOOK_DRAW_LIST_PRE(r) if(!(r)) { return; }
 #define IMGUI_HOOK_DRAW_LIST_POST(r) (r);
 #define IMGUI_HOOK_DRAW_LIST_SPLITTER
-#define IMGUI_HOOK_FONT_PRE(r) if(r) { return retr; }
+#define IMGUI_HOOK_FONT_PRE(r) if(!(r)) { return retr; }
 #else
 #define IMGUI_HOOK_DRAW_LIST_PRE(r)
 #define IMGUI_HOOK_DRAW_LIST_POST(r)
