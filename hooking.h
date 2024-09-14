@@ -17,6 +17,9 @@
 
 namespace ImGui {
     namespace Hooks {
+        namespace Global {
+            void ShouldAddDrawListToDrawData(const ::ImDrawList *draw_list, bool &shouldAdd);
+        }
         namespace ImDrawListSplitter {
             void SaveDrawListToSplitter(::ImDrawListSplitter &splitter, const ::ImDrawList *draw_list, int idx);
             void RestoreDrawListFromSplitter(::ImDrawListSplitter const &splitter, ::ImDrawList *draw_list, int idx);
