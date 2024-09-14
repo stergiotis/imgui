@@ -648,6 +648,7 @@ void ImDrawList::PushClipRect(const ImVec2& cr_min, const ImVec2& cr_max, bool i
     _ClipRectStack.push_back(cr);
     _CmdHeader.ClipRect = cr;
     _OnChangedClipRect();
+    IMGUI_HOOK_DRAW_LIST_POST(ImGui::Hooks::ImDrawList::Post::PushClipRect(this,cr_min,cr_max,intersect_with_current_clip_rect));
 }
 
 void ImDrawList::PushClipRectFullScreen()
@@ -662,6 +663,7 @@ void ImDrawList::PopClipRect()
     _ClipRectStack.pop_back();
     _CmdHeader.ClipRect = (_ClipRectStack.Size == 0) ? _Data->ClipRectFullscreen : _ClipRectStack.Data[_ClipRectStack.Size - 1];
     _OnChangedClipRect();
+    IMGUI_HOOK_DRAW_LIST_POST(ImGui::Hooks::ImDrawList::Post::PopClipRect(this));
 }
 
 void ImDrawList::PushTextureID(ImTextureID texture_id)

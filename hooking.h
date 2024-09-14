@@ -117,9 +117,7 @@ namespace ImGui {
             namespace Post {
                 void CreateImDrawList(::ImDrawList *draw_list, ImDrawListSharedData* shared_data);
                 void CloneOutput(const ::ImDrawList *draw_list,::ImDrawList *dest);
-                // FIXME call in code
                 void PushClipRect(::ImDrawList *draw_list,const ImVec2& clip_rect_min, const ImVec2& clip_rect_max, bool intersect_with_current_clip_rect = false);
-                // FIXME call in code
                 void PopClipRect(::ImDrawList *draw_list);
             }
         }
