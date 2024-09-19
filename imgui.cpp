@@ -5726,6 +5726,11 @@ static void ImGui::RenderDimmedBackgroundBehindWindow(ImGuiWindow* window, ImU32
     if ((col & IM_COL32_A_MASK) == 0)
         return;
 
+
+#ifdef IMGUI_HOOK_ENABLE
+    IMGUI_HOOK_GLOBAL_PRE(ImGui::Hooks::Global::Pre::RenderDimmedBackdgroundBehindWindow(window, col));
+#endif
+
     ImGuiViewportP* viewport = window->Viewport;
     ImRect viewport_rect = viewport->GetMainRect();
 
