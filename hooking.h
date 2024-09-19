@@ -5,20 +5,23 @@
 #define IMGUI_HOOK_DRAW_LIST_POST(r) (r);
 #define IMGUI_HOOK_DRAW_LIST_SPLITTER
 #define IMGUI_HOOK_FONT_PRE(r) if(!(r)) { return retr; }
+#define IMGUI_HOOK_GLOBAL_PRE(r) if(!(r)) { return; }
 #else
 #define IMGUI_HOOK_DRAW_LIST_PRE(r)
 #define IMGUI_HOOK_DRAW_LIST_POST(r)
 #define IMGUI_HOOK_FONT_PRE(r)
+#define IMGUI_HOOK_GLOBAL_PRE(r)
 #endif
 
-// TODO:
-//  * docking branch
-//  * concave polyline function
+struct ImGuiWindow;
 
 namespace ImGui {
     namespace Hooks {
         namespace Global {
             void ShouldAddDrawListToDrawData(const ::ImDrawList *draw_list, bool &shouldAdd);
+            namespace Pre {
+               bool RenderDimmedBackdgroundBehindWindow(::ImGuiWindow *window,ImU32 col);
+            }
         }
         namespace ImDrawListSplitter {
             void SaveDrawListToSplitter(::ImDrawListSplitter &splitter, const ::ImDrawList *draw_list, int idx);
