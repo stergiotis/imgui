@@ -3925,7 +3925,8 @@ static ImVec2 InputTextCalcTextSize(ImGuiContext* ctx, const char* text_begin, c
         if (c == '\r')
             continue;
 
-        const float char_width = ((int)c < font->IndexAdvanceX.Size ? font->IndexAdvanceX.Data[c] : font->FallbackAdvanceX) * scale;
+        const float char_width = font->GetCharAdvance(c)*scale;
+
         line_width += char_width;
     }
 
