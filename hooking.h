@@ -95,7 +95,7 @@ namespace ImGui {
                 bool PathBezierQuadraticCurveTo(::ImDrawList *draw_list,const ImVec2& p2, const ImVec2& p3, int num_segments);
                 bool PathRect(::ImDrawList *draw_list,const ImVec2& rect_min, const ImVec2& rect_max, float rounding, ImDrawFlags flags);
 
-                bool AddCallback(::ImDrawList *draw_list,void *callback, void* callback_data);
+                bool AddCallback(::ImDrawList *draw_list,void *callback, void* userdata, size_t userdata_size);
                 bool AddDrawCmd(::ImDrawList *draw_list);
 
                 bool PrimReserve(::ImDrawList *draw_list,int idx_count, int vtx_count);

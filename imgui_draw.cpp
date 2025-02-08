@@ -500,7 +500,7 @@ void ImDrawList::_PopUnusedDrawCmd()
 
 void ImDrawList::AddCallback(ImDrawCallback callback, void* userdata, size_t userdata_size)
 {
-    IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddCallback(this,reinterpret_cast<void*>(callback),callback_data));
+    IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImDrawList::Pre::AddCallback(this,reinterpret_cast<void*>(callback),userdata,userdata_size));
     IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
     ImDrawCmd* curr_cmd = &CmdBuffer.Data[CmdBuffer.Size - 1];
     IM_ASSERT(curr_cmd->UserCallback == NULL);
@@ -3997,7 +3997,7 @@ void ImFont::AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst)
 }
 
 // Find glyph, return fallback if missing
-const ImFontGlyph* ImFont::FindGlyph(ImWchar c)
+const ImFontGlyph* ImFont::FindGlyph(ImWchar c) const
 {
     if (c >= (size_t)IndexLookup.Size)
         return FallbackGlyph;
@@ -4007,7 +4007,7 @@ const ImFontGlyph* ImFont::FindGlyph(ImWchar c)
     return &Glyphs.Data[i];
 }
 
-const ImFontGlyph* ImFont::FindGlyphNoFallback(ImWchar c)
+const ImFontGlyph* ImFont::FindGlyphNoFallback(ImWchar c) const
 {
     if (c >= (size_t)IndexLookup.Size)
         return NULL;
@@ -4233,7 +4233,7 @@ void ImFont::RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 // Note: as with every ImDrawList drawing function, this expects that the font atlas texture is bound.
 void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width, bool cpu_fine_clip)
 {
-    HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImFont::Pre::RenderText(this,draw_list,size,pos,col,clip_rect,text_begin,text_end,wrap_width,cpu_fine_clip));
+    IMGUI_HOOK_DRAW_LIST_PRE(ImGui::Hooks::ImFont::Pre::RenderText(this,draw_list,size,pos,col,clip_rect,text_begin,text_end,wrap_width,cpu_fine_clip));
 
     // Align to be pixel perfect
     float x = IM_TRUNC(pos.x);
