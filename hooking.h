@@ -6,11 +6,13 @@
 #define IMGUI_HOOK_DRAW_LIST_SPLITTER
 #define IMGUI_HOOK_FONT_PRE(r) if(!(r)) { return retr; }
 #define IMGUI_HOOK_GLOBAL_PRE(r) if(!(r)) { return; }
+#define IMGUI_HOOK_GLOBAL_PRE_RETR(r) if(!(r)) { return retr; }
 #else
 #define IMGUI_HOOK_DRAW_LIST_PRE(r)
 #define IMGUI_HOOK_DRAW_LIST_POST(r)
 #define IMGUI_HOOK_FONT_PRE(r)
 #define IMGUI_HOOK_GLOBAL_PRE(r)
+#define IMGUI_HOOK_GLOBAL_PRE_RETR(r)
 #endif
 
 struct ImGuiWindow;
@@ -21,6 +23,7 @@ namespace ImGui {
             void ShouldAddDrawListToDrawData(const ::ImDrawList *draw_list, bool &shouldAdd);
             namespace Pre {
                bool RenderDimmedBackdgroundBehindWindow(::ImGuiWindow *window,ImU32 col);
+               bool InputTextCalcTextSize(::ImVec2 &out, ::ImGuiContext* ctx, const char* text_begin, const char* text_end, const char** remaining=nullptr, ImVec2* out_offset=nullptr, bool stop_on_new_line=false);
             }
         }
         namespace ImDrawListSplitter {

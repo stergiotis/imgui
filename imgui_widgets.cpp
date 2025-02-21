@@ -3896,6 +3896,11 @@ static int InputTextCalcTextLenAndLineCount(const char* text_begin, const char**
 // FIXME: Ideally we'd share code with ImFont::CalcTextSizeA()
 static ImVec2 InputTextCalcTextSize(ImGuiContext* ctx, const char* text_begin, const char* text_end, const char** remaining, ImVec2* out_offset, bool stop_on_new_line)
 {
+#ifdef IMGUI_HOOK_ENABLE
+    ImVec2 retr;
+    IMGUI_HOOK_GLOBAL_PRE_RETR(ImGui::Hooks::Global::Pre::InputTextCalcTextSize(retr,ctx,text_begin,text_end,remaining,out_offset,stop_on_new_line));
+#endif
+
     ImGuiContext& g = *ctx;
     ImFont* font = g.Font;
     const float line_height = g.FontSize;
