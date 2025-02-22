@@ -3606,7 +3606,13 @@ struct ImFont
     IMGUI_API ~ImFont();
     IMGUI_API const ImFontGlyph*FindGlyph(ImWchar c) const;
     IMGUI_API const ImFontGlyph*FindGlyphNoFallback(ImWchar c) const;
-    float                       GetCharAdvance(ImWchar c) const     { return ((int)c < IndexAdvanceX.Size) ? IndexAdvanceX[(int)c] : FallbackAdvanceX; }
+    float                       GetCharAdvance(ImWchar c) const {
+#ifdef IMGUI_HOOK_ENABLE
+        float retr;
+        IMGUI_HOOK_FONT_PRE(ImGui::Hooks::ImFont::Pre::GetCharAdvance(this, retr,c));
+#endif
+        return ((int)c < IndexAdvanceX.Size) ? IndexAdvanceX[(int)c] : FallbackAdvanceX;
+    }
     bool                        IsLoaded() const                    { return ContainerAtlas != NULL; }
     const char*                 GetDebugName() const                { return ConfigData ? ConfigData->Name : "<unknown>"; }
 
